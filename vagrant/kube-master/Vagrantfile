@@ -1,0 +1,35 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+TALOS_VERSION = ENV["TALOS_VERSION"] || "v1.12.4"
+TALOS_BOX = "talos-linux"
+
+Vagrant.configure("2") do |config|
+  config.vm.define "kube-master" do |master|
+    master.vm.box = TALOS_BOX
+
+    # Talos has no SSH — skip key insertion and set a short boot timeout
+    # Vagrant will report an SSH error, but the VM will remain running
+    master.ssh.insert_key = false
+    master.vm.boot_timeout = 1
+
+    # Bridge network on br0 (DHCP)
+    master.vm.network "public_network",
+      dev: "br0",
+      mode: "bridge",
+      type: "bridge"
+
+    # Disable synced folders (no guest agent in Talos)
+    master.vm.synced_folder ".", "/vagrant", disabled: true
+
+    master.vm.provider "libvirt" do |lv|
+      lv.memory = 4096
+      lv.cpus = 2
+      lv.machine_virtual_size = 40
+      lv.graphics_type = "none"
+      lv.boot "hd"
+    end
+  end
+end
+
+
