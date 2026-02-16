@@ -19,4 +19,5 @@ variable "metallb_namespace" {
 variable "ip_address_pool" {
   description = "IP address range for MetalLB to allocate (e.g. 192.168.56.200-192.168.56.250)"
   type        = string
+  default     = "192.168.0.240-192.168.0.250"
 }
