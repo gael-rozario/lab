@@ -5,3 +5,10 @@ module "metallb" {
   namespace       = local.metallb_namespace
   ip_address_pool = local.metallb_ip_address_pool
 }
+
+module "longhorn" {
+  source = "/home/gael/workspace/github.com/gael-rozario/terraform-modules/k8s/longhorn"
+
+  chart_version = local.longhorn_chart_version
+  namespace     = local.longhorn_namespace
+}
