@@ -2,13 +2,14 @@
 # vi: set ft=ruby :
 
 BRIDGE_MAC = "52:54:00:ca:19:03"
+BRIDGE_IP  = "192.168.0.172"
 
 Vagrant.configure("2") do |config|
   config.vm.define "kube-master" do |master|
     master.vm.box = "debian/bookworm64"
     master.vm.hostname = "kube-master"
 
-    # Bridge network on host's br0 (DHCP) — k3s API server will bind to this IP
+    # Bridge network on host's br0 — static DHCP reservation for BRIDGE_MAC → BRIDGE_IP
     master.vm.network "public_network",
       dev: "br0",
       mode: "bridge",
@@ -23,24 +24,10 @@ Vagrant.configure("2") do |config|
       lv.machine_virtual_size = 200
     end
 
-    master.vm.provision "shell", env: { "BRIDGE_MAC" => BRIDGE_MAC }, inline: <<-SHELL
+    master.vm.provision "shell", env: { "BRIDGE_IP" => BRIDGE_IP }, inline: <<-SHELL
       apt-get update -qq
-      apt-get install -y curl
-
-      # Detect the bridge NIC by MAC address (interface name varies by distro/driver)
-      BRIDGE_IFACE=$(ip link | grep -B1 "$BRIDGE_MAC" | head -1 | awk -F: '{print $2}' | tr -d ' ')
-
-      # Wait for DHCP lease; request one if not yet assigned
-      for i in $(seq 1 30); do
-        BRIDGE_IP=$(ip -4 addr show "$BRIDGE_IFACE" | awk '/inet / {print $2}' | cut -d/ -f1)
-        [ -n "$BRIDGE_IP" ] && break
-        echo "Waiting for DHCP on $BRIDGE_IFACE... ($i/30)"
-        [ "$i" = "5" ] && dhclient "$BRIDGE_IFACE"
-        sleep 2
-      done
-
-      echo "Bridge interface: $BRIDGE_IFACE, IP: $BRIDGE_IP"
-      [ -z "$BRIDGE_IP" ] && echo "ERROR: no IP on $BRIDGE_IFACE" && exit 1
+      apt-get install -y curl open-iscsi nfs-common util-linux
+      systemctl enable --now iscsid
 
       curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
         --node-ip=$BRIDGE_IP \
