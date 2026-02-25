@@ -4,7 +4,7 @@ locals {
 }
 
 module "longhorn" {
-  source = "/home/gael/workspace/github.com/gael-rozario/terraform-modules/k8s/longhorn"
+  source = "github.com/gael-rozario/terraform-modules//k8s/longhorn"
 
   chart_version = local.longhorn_chart_version
   namespace     = local.longhorn_namespace

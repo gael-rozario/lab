@@ -5,7 +5,7 @@ locals {
 }
 
 module "metallb" {
-  source = "/home/gael/workspace/github.com/gael-rozario/terraform-modules/k8s/metallb"
+  source = "github.com/gael-rozario/terraform-modules//k8s/metallb"
 
   chart_version   = local.metallb_chart_version
   namespace       = local.metallb_namespace
