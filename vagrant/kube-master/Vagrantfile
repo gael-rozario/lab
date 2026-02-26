@@ -32,7 +32,8 @@ Vagrant.configure("2") do |config|
       curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
         --node-ip=$BRIDGE_IP \
         --advertise-address=$BRIDGE_IP \
-        --tls-san=$BRIDGE_IP" sh -
+        --tls-san=$BRIDGE_IP \
+        --flannel-iface=eth1" sh -
     SHELL
   end
 end
