@@ -1,5 +1,5 @@
 module "longhorn" {
-  source = "./longhorn"
+  source = "./modules/longhorn"
 }
 
 output "longhorn_namespace" {
