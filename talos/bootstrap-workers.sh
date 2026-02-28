@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 WORKERS=("192.168.0.117" "192.168.0.190" "192.168.0.106")
-CONFIG_DIR="${SCRIPT_DIR}/config/master"
+CONFIG_DIR="${SCRIPT_DIR}/config"
 
 apply() {
   for ip in "${WORKERS[@]}"; do

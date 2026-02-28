@@ -2,5 +2,5 @@
 **/.terraform/
 **/.terraform*
 **/terraform.tfvars
-talos/config/master/*
-!talos/config/master/.gitkeep
+talos/config/*
+!talos/config/.gitkeep

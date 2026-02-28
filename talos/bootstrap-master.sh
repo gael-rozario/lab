@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CLUSTER_NAME="lab"
 CONTROL_PLANE="192.168.0.172"
-CONFIG_DIR="${SCRIPT_DIR}/config/master"
+CONFIG_DIR="${SCRIPT_DIR}/config"
 
 gen_config() {
   echo "==> Generating Talos configs in ${CONFIG_DIR}/"
