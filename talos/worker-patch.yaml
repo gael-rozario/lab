@@ -1,0 +1,6 @@
+machine:
+  disks:
+    - device: /dev/vdb
+      partitions:
+        - mountpoint: /var/lib/longhorn
+          size: 0

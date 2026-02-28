@@ -1,87 +1,31 @@
 Vagrant.configure("2") do |config|
-  config.vm.box = "debian/bookworm64"
+  config.vm.box = "talos-linux"
+  config.vm.communicator = "none"
   config.vm.synced_folder ".", "/vagrant", disabled: true
-  config.vm.boot_timeout = 600
-  config.ssh.connect_timeout = 30
 
-  k3s_url   = ENV.fetch("K3S_URL")
-  k3s_token = ENV.fetch("K3S_TOKEN")
+  workers = [
+    { name: "worker1", mac: "52:54:00:4e:0b:04" },
+    { name: "worker2", mac: "52:54:00:07:41:56" },
+    { name: "worker3", mac: "52:54:00:a1:b2:c3" },
+  ]
 
-  # Worker 1
-  config.vm.define "worker1" do |vm|
-    vm.vm.network "public_network", dev: "br0", mode: "bridge", type: "bridge", mac: "52:54:00:4e:0b:04"
-    vm.vm.provision "shell", inline: <<~SCRIPT
-      apt-get update -qq
-      apt-get install -y -qq curl open-iscsi nfs-common cryptsetup dmsetup
-      systemctl enable --now iscsid
-      mkfs.ext4 -F /dev/vdb
-      mkdir -p /var/lib/longhorn
-      echo '/dev/vdb /var/lib/longhorn ext4 defaults,discard 0 0' >> /etc/fstab
-      mount /var/lib/longhorn
-      until ip -o addr show to 192.168.0.117 | grep -q '192.168.0.117'; do sleep 2; done
-      curl -sfL https://get.k3s.io | K3S_URL="#{k3s_url}" K3S_TOKEN="#{k3s_token}" sh -s - agent --node-name=worker1 --node-ip=192.168.0.117 --flannel-iface=eth1
-    SCRIPT
+  workers.each do |w|
+    config.vm.define w[:name] do |vm|
+      vm.vm.network "public_network",
+        dev: "br0",
+        mode: "bridge",
+        type: "bridge",
+        mac: w[:mac]
 
-    vm.vm.provider :libvirt do |v|
-      v.uri = "qemu:///system"
-      v.storage_pool_name = "home-pool"
-      v.machine_virtual_size = 40
-      v.memory = 4096
-      v.cpus   = 4
-      v.cpu_mode = "host-passthrough"
-      v.storage :file, size: '160G', pool: 'home-pool'
-    end
-  end
-
-  # Worker 2
-  config.vm.define "worker2" do |vm|
-    vm.vm.network "public_network", dev: "br0", mode: "bridge", type: "bridge", mac: "52:54:00:07:41:56"
-    vm.vm.provision "shell", inline: <<~SCRIPT
-      apt-get update -qq
-      apt-get install -y -qq curl open-iscsi nfs-common cryptsetup dmsetup
-      systemctl enable --now iscsid
-      mkfs.ext4 -F /dev/vdb
-      mkdir -p /var/lib/longhorn
-      echo '/dev/vdb /var/lib/longhorn ext4 defaults,discard 0 0' >> /etc/fstab
-      mount /var/lib/longhorn
-      until ip -o addr show to 192.168.0.190 | grep -q '192.168.0.190'; do sleep 2; done
-      curl -sfL https://get.k3s.io | K3S_URL="#{k3s_url}" K3S_TOKEN="#{k3s_token}" sh -s - agent --node-name=worker2 --node-ip=192.168.0.190 --flannel-iface=eth1
-    SCRIPT
-
-    vm.vm.provider :libvirt do |v|
-      v.uri = "qemu:///system"
-      v.storage_pool_name = "home-pool"
-      v.machine_virtual_size = 40
-      v.memory = 4096
-      v.cpus   = 4
-      v.cpu_mode = "host-passthrough"
-      v.storage :file, size: '160G', pool: 'home-pool'
-    end
-  end
-
-  # Worker 3
-  config.vm.define "worker3" do |vm|
-    vm.vm.network "public_network", dev: "br0", mode: "bridge", type: "bridge", mac: "52:54:00:a1:b2:c3"
-    vm.vm.provision "shell", inline: <<~SCRIPT
-      apt-get update -qq
-      apt-get install -y -qq curl open-iscsi nfs-common cryptsetup dmsetup
-      systemctl enable --now iscsid
-      mkfs.ext4 -F /dev/vdb
-      mkdir -p /var/lib/longhorn
-      echo '/dev/vdb /var/lib/longhorn ext4 defaults,discard 0 0' >> /etc/fstab
-      mount /var/lib/longhorn
-      until ip -o addr show to 192.168.0.106 | grep -q '192.168.0.106'; do sleep 2; done
-      curl -sfL https://get.k3s.io | K3S_URL="#{k3s_url}" K3S_TOKEN="#{k3s_token}" sh -s - agent --node-name=worker3 --node-ip=192.168.0.106 --flannel-iface=eth1
-    SCRIPT
-
-    vm.vm.provider :libvirt do |v|
-      v.uri = "qemu:///system"
-      v.storage_pool_name = "home-pool"
-      v.machine_virtual_size = 40
-      v.memory = 4096
-      v.cpus   = 4
-      v.cpu_mode = "host-passthrough"
-      v.storage :file, size: '160G', pool: 'home-pool'
+      vm.vm.provider :libvirt do |v|
+        v.uri = "qemu:///system"
+        v.storage_pool_name = "home-pool"
+        v.machine_virtual_size = 40
+        v.memory = 4096
+        v.cpus   = 4
+        v.cpu_mode = "host-passthrough"
+        v.storage :file, size: '160G', pool: 'home-pool'
+      end
     end
   end
 end

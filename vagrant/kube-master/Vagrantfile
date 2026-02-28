@@ -6,8 +6,9 @@ BRIDGE_IP  = "192.168.0.172"
 
 Vagrant.configure("2") do |config|
   config.vm.define "kube-master" do |master|
-    master.vm.box = "debian/bookworm64"
+    master.vm.box = "talos-linux"
     master.vm.hostname = "kube-master"
+    master.vm.communicator = "none"
 
     # Bridge network on host's br0 — static DHCP reservation for BRIDGE_MAC → BRIDGE_IP
     master.vm.network "public_network",
@@ -23,17 +24,5 @@ Vagrant.configure("2") do |config|
       lv.cpus = 2
       lv.machine_virtual_size = 200
     end
-
-    master.vm.provision "shell", env: { "BRIDGE_IP" => BRIDGE_IP }, inline: <<-SHELL
-      apt-get update -qq
-      apt-get install -y curl open-iscsi nfs-common util-linux
-      systemctl enable --now iscsid
-
-      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
-        --node-ip=$BRIDGE_IP \
-        --advertise-address=$BRIDGE_IP \
-        --tls-san=$BRIDGE_IP \
-        --flannel-iface=eth1" sh -
-    SHELL
   end
 end
