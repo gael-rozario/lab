@@ -5,6 +5,7 @@ metadata:
   name: nginx-service
   namespace: default # Replace with your namespace if different
 spec:
+  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 80
