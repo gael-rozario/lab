@@ -1,6 +1,7 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "talos-linux"
-  config.vm.communicator = "none"
+  config.vm.boot_timeout = 0
+  config.ssh.insert_key = false
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   workers = [
@@ -24,6 +25,7 @@ Vagrant.configure("2") do |config|
         v.memory = 4096
         v.cpus   = 4
         v.cpu_mode = "host-passthrough"
+        v.mgmt_attach = false
         v.storage :file, size: '160G', pool: 'home-pool'
       end
     end
