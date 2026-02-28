@@ -15,6 +15,8 @@ gen_config() {
     --config-patch @"${SCRIPT_DIR}/extensions-patch.yaml" \
     --config-patch-worker @"${SCRIPT_DIR}/worker-patch.yaml" \
     --force
+  talosctl config endpoint "${CONTROL_PLANE}" --talosconfig "${CONFIG_DIR}/talosconfig"
+  talosctl config node "${CONTROL_PLANE}" --talosconfig "${CONFIG_DIR}/talosconfig"
 }
 
 apply() {
@@ -22,6 +24,15 @@ apply() {
   talosctl apply-config --insecure \
     --nodes "${CONTROL_PLANE}" \
     --file "${CONFIG_DIR}/controlplane.yaml"
+}
+
+wait_for_api() {
+  echo "==> Waiting for Talos API on ${CONTROL_PLANE}:50000"
+  until talosctl version --talosconfig "${CONFIG_DIR}/talosconfig" --nodes "${CONTROL_PLANE}" &>/dev/null; do
+    echo "  not ready, retrying in 5s..."
+    sleep 5
+  done
+  echo "  Talos API is up"
 }
 
 bootstrap() {
@@ -43,21 +54,24 @@ usage() {
   echo "Usage: $0 <command>"
   echo ""
   echo "Commands:"
-  echo "  gen-config   Generate Talos machine configs (run first)"
-  echo "  apply        Apply config to the control plane node"
-  echo "  bootstrap    Bootstrap etcd (run once after apply)"
-  echo "  kubeconfig   Fetch kubeconfig"
-  echo "  all          Run full sequence: gen-config → apply → bootstrap → kubeconfig"
+  echo "  gen-config    Generate Talos machine configs (run first)"
+  echo "  apply         Apply config to the control plane node"
+  echo "  wait-for-api  Wait for Talos API to become available"
+  echo "  bootstrap     Bootstrap etcd (run once after apply)"
+  echo "  kubeconfig    Fetch kubeconfig"
+  echo "  all           Run full sequence: gen-config → apply → wait-for-api → bootstrap → kubeconfig"
 }
 
 case "${1:-}" in
-  gen-config) gen_config ;;
-  apply)      apply ;;
-  bootstrap)  bootstrap ;;
-  kubeconfig) kubeconfig ;;
+  gen-config)    gen_config ;;
+  apply)         apply ;;
+  wait-for-api)  wait_for_api ;;
+  bootstrap)     bootstrap ;;
+  kubeconfig)    kubeconfig ;;
   all)
     gen_config
     apply
+    wait_for_api
     bootstrap
     kubeconfig
     echo "==> Done. Run: export KUBECONFIG=${CONFIG_DIR}/kubeconfig"
