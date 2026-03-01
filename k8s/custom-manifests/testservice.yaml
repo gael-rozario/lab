@@ -5,10 +5,11 @@ metadata:
   name: nginx-service
   namespace: default # Replace with your namespace if different
 spec:
+  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80 # The port your NGINX container is listening on
+      targetPort: 80
   selector:
-    app: nginx-deployment # This must match the labels on your NGINX pods
+    app: nginx-deployment
 
